@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: magic_lantern
     steps:
       - uses: actions/checkout@v4
 
@@ -32,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          path: magic_lantern/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
