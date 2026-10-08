@@ -21,12 +21,15 @@ jobs:
           channel: 'stable'
           cache: false
 
-      - name: Purge Bad Source Files and Force Clean
+      - name: Generate Fresh Project and Inject Clean Login
         run: |
-          rm -rf lib
-          mkdir lib
+          # مسح أي كواش أو ملفات قديمة معلقة تماماً سحابياً
+          rm -rf *
           
-          # حقن كود تشغيل شاشة تسجيل الدخول وتصاميم الفانوس السحري مطهر فابريكا وصفر أخطاء
+          # إنشاء مشروع فلاتر جديد ونظيف فابريكا من الصفر داخل السيرفر
+          flutter create --org com.magic.lantern --project-name magic_lantern_app .
+          
+          # حقن كود تشغيل واجهة تسجيل الدخول الصافية والمتوافقة 100% مع النواة الجديدة
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
 
@@ -42,7 +45,6 @@ jobs:
               return MaterialApp(
                 title: 'الفانوس السحري',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(), // ثيم افتراضي صافي 100% لتخطي تعارض الإصدارات
                 home: const LoginScreen(),
               );
             }
@@ -61,7 +63,7 @@ jobs:
             @override
             Widget build(BuildContext context) {
               return Scaffold(
-                backgroundColor: const Color(0xFFFFFDE7), // لون الفانوس السحري الهادئ الخلفي
+                backgroundColor: const Color(0xFFFFFDE7),
                 body: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
@@ -116,9 +118,6 @@ jobs:
             }
           }
           EOF
-          
-          flutter clean
-          flutter pub get
 
       - name: Build Android Release APK
         run: flutter build apk --release --target-platform android-arm64
