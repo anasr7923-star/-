@@ -25,12 +25,6 @@ jobs:
             exit 1
           fi
           
-          # تحويل المسار ليكون نسبي للمجلد المختار
-          RELATIVE_MAIN=$(realPath --relative-to="$PROJECT_DIR" "$MAIN_FILE" 2>/dev/null || echo "lib/main.dart")
-          
-          echo "Found project at: $PROJECT_DIR"
-          echo "Found main file at: $MAIN_FILE"
-          
           echo "project_path=$PROJECT_DIR" >> $GITHUB_OUTPUT
           echo "main_path=$MAIN_FILE" >> $GITHUB_OUTPUT
 
@@ -52,7 +46,7 @@ jobs:
         working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64 -t ${{ steps.find_project.outputs.main_path }}
+        run: flutter build apk --release --target-platform android-arm64 --target=${{ steps.find_project.outputs.main_path }}
         working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Upload Finished APK
