@@ -9,6 +9,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Find Flutter Project and Main File
+        id: find_project
+        run: |
+          echo "Searching for pubspec.yaml and main.dart..."
+          PROJECT_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          MAIN_FILE=$(find . -name "main.dart" | head -n 1)
+          
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: pubspec.yaml not found!"
+            exit 1
+          fi
+          if [ -z "$MAIN_FILE" ]; then
+            echo "ERROR: main.dart not found anywhere!"
+            exit 1
+          fi
+          
+          echo "project_path=$PROJECT_DIR" >> $GITHUB_OUTPUT
+          echo "main_path=$MAIN_FILE" >> $GITHUB_OUTPUT
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -24,12 +43,16 @@ jobs:
         run: |
           flutter clean
           flutter pub get
+        working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64
+        run: flutter build apk --release --target-platform android-arm64 --target=${{ steps.find_project.outputs.main_path }}
+        working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            ${{ steps.find_project.outputs.project_path }}/build/app/outputs/flutter-apk/app-release.apk
+            ${{ steps.find_project.outputs.project_path }}/build/app/outputs/apk/release/app-release.apk
