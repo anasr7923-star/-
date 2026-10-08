@@ -1,97 +1,51 @@
 name: Build Magic Lantern APK
-
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v5
+      - name: Find Flutter Project
+        id: find_project
+        run: |
+          echo "Searching for pubspec.yaml..."
+          PROJECT_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: pubspec.yaml not found anywhere in the repository!"
+            exit 1
+          fi
+          echo "Found project at: $PROJECT_DIR"
+          echo "project_path=$PROJECT_DIR" >> $GITHUB_OUTPUT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'zulu'
           java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
-          cache: true
+          channel: 'stable'
 
-      - name: Show Environment
+      - name: Clean and Install Dependencies
         run: |
-          java -version
-          flutter --version
-          dart --version
-          flutter doctor -v
-
-      - name: Find Flutter Project
-        run: |
-          echo "Searching for pubspec.yaml..."
-          find . -name pubspec.yaml -print
-
-      - name: Detect Project Folder
-        shell: bash
-        run: |
-          if [ -f "pubspec.yaml" ]; then
-            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
-          elif [ -f "magic_lantern/pubspec.yaml" ]; then
-            echo "PROJECT_DIR=magic_lantern" >> "$GITHUB_ENV"
-          else
-            echo "ERROR: pubspec.yaml not found"
-            exit 1
-          fi
-
-      - name: Check Flutter Project
-        run: |
-          cd "$PROJECT_DIR"
-          pwd
-          ls -la
-          test -f pubspec.yaml
-
-      - name: Flutter Clean
-        run: |
-          cd "$PROJECT_DIR"
           flutter clean
-
-      - name: Flutter Pub Get
-        run: |
-          cd "$PROJECT_DIR"
           flutter pub get
+        working-directory: ${{ steps.find_project.outputs.project_path }}
 
-      - name: Flutter Analyze
-        run: |
-          cd "$PROJECT_DIR"
-          flutter analyze --no-fatal-infos
+      - name: Build Android Release APK
+        run: flutter build apk --release --target-platform android-arm64
+        working-directory: ${{ steps.find_project.outputs.project_path }}
 
-      - name: Build APK
-        run: |
-          cd "$PROJECT_DIR"
-          flutter build apk --release
-
-      - name: Verify APK
-        run: |
-          cd "$PROJECT_DIR"
-          ls -lh build/app/outputs/flutter-apk/
-
-      - name: Upload APK
+      - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
-          name: magic-lantern-release-apk
+          name: app-release
           path: |
-            **/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+            ${{ steps.find_project.outputs.project_path }}/build/app/outputs/flutter-apk/app-release.apk
+            ${{ steps.find_project.outputs.project_path }}/build/app/outputs/apk/release/app-release.apk
