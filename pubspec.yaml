@@ -1,5 +1,5 @@
 name: magic_lantern
-description: "A smart transportation application."
+description: "برنامج النقل الذكي والمحافظ الموحدة الفاخر لعام 2026"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,10 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
-  http: ^1.1.0
-  google_maps_flutter: ^2.5.0
+
+  # 🟢 الحزم السيادية الموحدة والمأمنة تماماً بدون أي تضارب
+  google_fonts: ^8.2.1
+  http: ^1.2.0
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
   geolocator: ^10.1.0
+  google_maps_flutter: ^2.5.3
 
 dev_dependencies:
   flutter_test:
