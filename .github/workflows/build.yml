@@ -9,17 +9,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Find Flutter Project
+      - name: Find Flutter Project and Main File
         id: find_project
         run: |
-          echo "Searching for pubspec.yaml..."
+          echo "Searching for pubspec.yaml and main.dart..."
           PROJECT_DIR=$(find . -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          MAIN_FILE=$(find . -name "main.dart" | head -n 1)
+          
           if [ -z "$PROJECT_DIR" ]; then
-            echo "ERROR: pubspec.yaml not found anywhere in the repository!"
+            echo "ERROR: pubspec.yaml not found!"
             exit 1
           fi
+          if [ -z "$MAIN_FILE" ]; then
+            echo "ERROR: main.dart not found anywhere!"
+            exit 1
+          fi
+          
+          # تحويل المسار ليكون نسبي للمجلد المختار
+          RELATIVE_MAIN=$(realPath --relative-to="$PROJECT_DIR" "$MAIN_FILE" 2>/dev/null || echo "lib/main.dart")
+          
           echo "Found project at: $PROJECT_DIR"
+          echo "Found main file at: $MAIN_FILE"
+          
           echo "project_path=$PROJECT_DIR" >> $GITHUB_OUTPUT
+          echo "main_path=$MAIN_FILE" >> $GITHUB_OUTPUT
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -39,7 +52,7 @@ jobs:
         working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64
+        run: flutter build apk --release --target-platform android-arm64 -t ${{ steps.find_project.outputs.main_path }}
         working-directory: ${{ steps.find_project.outputs.project_path }}
 
       - name: Upload Finished APK
