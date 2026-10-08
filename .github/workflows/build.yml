@@ -19,11 +19,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
-      - name: Clean and Install Dependencies
+      - name: Fix Android Configuration and Subprojects
         run: |
           flutter clean
           flutter pub get
+          cd android
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          cd ..
 
       - name: Build Android Release APK
         run: flutter build apk --release --target-platform android-arm64 --target=lib/main.dart
