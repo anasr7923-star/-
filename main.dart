@@ -14,7 +14,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.amber,
-        useMaterialDesign: true,
+        // تم حذف السطر التالي
+        // useMaterialDesign: true,
       ),
       home: Scaffold(
         backgroundColor: Colors.amber.shade50,
