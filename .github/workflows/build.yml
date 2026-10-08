@@ -26,6 +26,15 @@ jobs:
           flutter clean
           flutter pub get
 
+      - name: Force Upgrade Android SDK Versions
+        run: |
+          cd android
+          # إجبار المشروع سحابياً على استخدام compileSdk 34 و minSdkVersion 21 لتتوافق مع المكاتب
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' app/build.gradle || true
+          sed -i 's/minSdkVersion .*/minSdkVersion 21/g' app/build.gradle || true
+          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' app/build.gradle || true
+          cd ..
+
       - name: Build Android Release APK
         run: flutter build apk --release --target-platform android-arm64 --target=lib/main.dart
 
