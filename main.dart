@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_screen.dart'; // ربط شاشة تسجيل الدخول الرئيسية لفتح باقي التطبيق
 
 void main() {
   runApp(const MyApp());
@@ -10,34 +11,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Magic Lantern',
+      title: 'الفانوس السحري',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        // إعدادات الألوان والهوية الملكية للتطبيق
         primarySwatch: Colors.amber,
-        // تم حذف السطر التالي
-        // useMaterialDesign: true,
+        scaffoldBackgroundColor: Colors.white,
+        useMaterial3: true, // متوافق تماماً مع تحديثات فلاتر السحابية الجديدة
       ),
-      home: Scaffold(
-        backgroundColor: Colors.amber.shade50,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.flash_on, size: 80, color: Colors.amber),
-              const SizedBox(height: 20),
-              const Text(
-                'تطبيق الفانوس السحري جاهز',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'تم التجميع بنجاح كاسح عبر السيرفر السحابي',
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
-              ),
-            ],
-          ),
-        ),
-      ),
+      // نقطة الانطلاق الرسمية؛ ومنها ينفتح رادار الـ GPS، المحفظة، ولوحة التحكم
+      home: const LoginScreen(), 
     );
   }
 }
