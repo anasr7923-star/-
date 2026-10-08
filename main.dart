@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // ربط شاشة تسجيل الدخول الرئيسية لفتح باقي التطبيق
+import 'login_screen.dart'; // ربط شاشة تسجيل الدخول الملكية مالتك لفتح باقي التطبيق
 
 void main() {
   runApp(const MyApp());
@@ -13,13 +13,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'الفانوس السحري',
       debugShowCheckedModeBanner: false,
+      // ثيم افتراضي حديث ونظيف 100% ومتوافق مع الإصدار الجديد بدون أي أسطر معوجة
       theme: ThemeData(
-        // إعدادات الألوان والهوية الملكية للتطبيق
-        primarySwatch: Colors.amber,
-        scaffoldBackgroundColor: Colors.white,
-        useMaterial3: true, // متوافق تماماً مع تحديثات فلاتر السحابية الجديدة
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
       ),
-      // نقطة الانطلاق الرسمية؛ ومنها ينفتح رادار الـ GPS، المحفظة، ولوحة التحكم
+      // نقطة الانطلاق الرسمية لفتح شاشات الكباتن والركاب والمحافظ
       home: const LoginScreen(), 
     );
   }
