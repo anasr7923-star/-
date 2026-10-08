@@ -1,36 +1,43 @@
-name: Build Magic Lantern APK
-on:
-  workflow_dispatch:
+import 'package:flutter/material.dart';
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+void main() {
+  runApp(const MyApp());
+}
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-      - name: Setup Flutter Action
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: |
-          flutter clean
-          flutter pub get
-
-      - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64 --target=lib/main.dart
-
-      - name: Upload Finished APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Magic Lantern',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.amber,
+        // تم حذف السطر التالي
+        // useMaterialDesign: true,
+      ),
+      home: Scaffold(
+        backgroundColor: Colors.amber.shade50,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.flash_on, size: 80, color: Colors.amber),
+              const SizedBox(height: 20),
+              const Text(
+                'تطبيق الفانوس السحري جاهز',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'تم التجميع بنجاح كاسح عبر السيرفر السحابي',
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
