@@ -20,10 +20,8 @@ jobs:
 
       - name: Create Independent Clean App
         run: |
-          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي ملفات قديمة
           flutter create --org com.magic.lantern --project-name magic_lantern_app clean_build_dir
           
-          # 2. حقن منظومة واجهة الدخول وزرار تسجيل مستخدم جديد فابريكا
           cat << 'EOF' > clean_build_dir/lib/main.dart
           import 'package:flutter/material.dart';
 
@@ -133,6 +131,8 @@ jobs:
           }
           EOF
 
+          flutter pub get
+
       - name: Inject Local SDK Properties
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > clean_build_dir/android/local.properties
@@ -141,7 +141,7 @@ jobs:
       - name: Build Android Release APK
         run: |
           cd clean_build_dir
-          flutter build apk --release --target-platform android-arm64
+          flutter build apk --release
 
       - name: Upload Finished APK
         uses: actions/upload-artifact@v4
