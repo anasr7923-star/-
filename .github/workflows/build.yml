@@ -83,7 +83,7 @@ jobs:
           }
           EOF
 
-          # 4. حقن كود ملف الـ main.dart الصافي والمكتمل بنسبة 100% وصفر أخطاء ثيمات أو ألوان
+          # 4. حقن كود ملف الـ main.dart الصافي والمكتمل ومربوط بزرار تسجيل مستخدم جديد
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -192,7 +192,7 @@ jobs:
                               : ElevatedButton(
                                   onPressed: _handleLogin,
                                   style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
                                     backgroundColor: Colors.amber,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   ),
@@ -222,17 +222,17 @@ jobs:
           
           flutter pub get
 
-      - name: Inject SDK and Force Upgrade Gradle Properties
+      - name: Inject SDK and Force Upgrade Kotlin DSL Properties
         run: |
-          # 1. ضبط ملف الخصائص السحابي الرئيسي لمنع عمى المسارات
+          # 1. ضبط ملف الخصائص السحابي الرئيسي
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
           
-          # 2. حقن وإجبار المشروع سحابياً على استخدام compileSdk 34 و minSdkVersion 21 لتثبيت مستقر وصفر أخطاء جرادل
-          if [ -f android/app/build.gradle ]; then
-            sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle || true
-            sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle || true
-            sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle || true
+          # 2. استهداف ملف الـ Kotlin DSL الحديث (.kts) وتعديل قيم التجميع بالمسطرة هندسياً غصب عن السيرفر
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/compileSdkVersion(.*/compileSdkVersion(34)/g' android/app/build.gradle.kts || true
+            sed -i 's/minSdkVersion(.*/minSdkVersion(21)/g' android/app/build.gradle.kts || true
+            sed -i 's/targetSdkVersion(.*/targetSdkVersion(34)/g' android/app/build.gradle.kts || true
           fi
 - name: Build Android Release APK
 run: flutter build apk --release --target-platform android-arm64
