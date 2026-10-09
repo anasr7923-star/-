@@ -23,7 +23,7 @@ jobs:
 
       - name: Purge Everything and Build Fresh Project
         run: |
-          # 1. تصفير وإبادة أي كواش أو ملفات معلقة سحابياً كلياً
+          # 1. تصفير وإبادة أي كواش أو ملفات قديمة معلقة سحابياً كلياً
           rm -rf *
           
           # 2. إنشاء مشروع فلاتر جديد فابريكا من الصفر داخل السيرفر
@@ -83,7 +83,7 @@ jobs:
           }
           EOF
 
-          # 4. حقن كود ملف الـ main.dart الصافي والمكتمل بنسبة 100% وصفر أخطاء ثيمات
+          # 4. حقن كود ملف الـ main.dart الصافي والمكتمل بنسبة 100% وصفر أخطاء ثيمات أو ألوان
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -192,7 +192,7 @@ jobs:
                               : ElevatedButton(
                                   onPressed: _handleLogin,
                                   style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric.symmetric(vertical: 16),
                                     backgroundColor: Colors.amber,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                                   ),
@@ -222,17 +222,22 @@ jobs:
           
           flutter pub get
 
-      - name: Inject SDK Properties
+      - name: Inject SDK and Force Upgrade Gradle Properties
         run: |
-          # توليد ملف local.properties وحقن مسارات الـ SDK سحابياً كلياً لمنع كراش الجرادل
+          # 1. ضبط ملف الخصائص السحابي الرئيسي لمنع عمى المسارات
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
           echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
-
-      - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64
-
-      - name: Upload Finished APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          
+          # 2. حقن وإجبار المشروع سحابياً على استخدام compileSdk 34 و minSdkVersion 21 لتثبيت مستقر وصفر أخطاء جرادل
+          if [ -f android/app/build.gradle ]; then
+            sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle || true
+            sed -i 's/minSdkVersion .*/minSdkVersion 21/g' android/app/build.gradle || true
+            sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle || true
+          fi
+- name: Build Android Release APK
+run: flutter build apk --release --target-platform android-arm64
+- name: Upload Finished APK
+uses: actions/upload-artifact@v4
+with:
+name: app-release
+path: build/app/outputs/flutter-apk/app-release.apk
