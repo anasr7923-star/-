@@ -23,8 +23,12 @@ jobs:
 
       - name: Regenerate Clean Android Project
         run: |
+          # مسح مجلد الأندرويد القديم التالف المسبب للكراش السحابي
           rm -rf android
+          
+          # إعادة توليد مجلد أندرويد فابريكا فريش ونظيف 100% متوافق مع السيرفر
           flutter create --org com.magic.lantern --project-name magic_lantern .
+          
           flutter pub get
 
       - name: Build Android Release APK
