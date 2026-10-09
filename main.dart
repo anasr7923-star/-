@@ -1,23 +1,41 @@
-import 'package:flutter/material.dart';
-import 'login_screen.dart'; // ربط شاشة تسجيل الدخول لفتح باقي المنظومة
+name: Build Magic Lantern APK
+on:
+  workflow_dispatch:
 
-void main() {
-  runApp(const MyApp());
-}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'الفانوس السحري',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
-      ),
-      home: const LoginScreen(), 
-    );
-  }
-}
+      - name: Setup Flutter Action
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: false
+
+      - name: Regenerate Clean Android Project
+        run: |
+          # مسح مجلد الأندرويد القديم التالف المسبب للكراش السحابي
+          rm -rf android
+          
+          # إعادة توليد مجلد أندرويد فابريكا فريش ونظيف 100% متوافق مع السيرفر
+          flutter create --org com.magic.lantern --project-name magic_lantern .
+          
+          flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release --target-platform android-arm64 --target=lib/main.dart
+
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
