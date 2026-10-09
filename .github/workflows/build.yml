@@ -222,6 +222,12 @@ jobs:
           
           flutter pub get
 
+      - name: Inject SDK Properties
+        run: |
+          # توليد ملف local.properties وحقن مسارات الـ SDK سحابياً كلياً لمنع كراش الجرادل
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
+
       - name: Build Android Release APK
         run: flutter build apk --release --target-platform android-arm64
 
