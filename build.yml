@@ -20,10 +20,10 @@ jobs:
 
       - name: Create Independent Clean App
         run: |
-          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي ملفات قديمة
+          # 1. إنشاء المشروع من الصفر سحابياً لمنع أي تضارب
           flutter create --org com.magic.lantern --project-name magic_lantern_app clean_build_dir
           
-          # 2. حقن شفرة ملف شبكة الاتصال بقاعدة بيانات سيرفر Clever Cloud
+          # 2. حقن شفرة محرك الاتصال بقاعدة بيانات سيرفر Clever Cloud والمحافظ الرقمية
           cat << 'EOF' > clean_build_dir/lib/network_service.dart
           import 'dart:convert';
           import 'dart:io';
@@ -77,7 +77,7 @@ jobs:
           }
           EOF
           
-          # 3. حقن منظومة واجهة الدخول الكلية وزرار تسجيل مستخدم جديد باللمس
+          # 3. حقن كود الواجهة الكاملة الشاملة الحقيقية بالفانوس والخانات وأزرار تسجيل الحساب الجديد
           cat << 'EOF' > clean_build_dir/lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -91,10 +91,7 @@ jobs:
               return MaterialApp(
                 title: 'الفانوس السحري',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(
-                  useMaterial3: true,
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
-                ),
+                theme: ThemeData(useMaterial3: true),
                 home: const LoginScreen(),
               );
             }
