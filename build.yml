@@ -21,9 +21,14 @@ jobs:
           channel: 'stable'
           cache: false
 
-      - name: Clean and Install Dependencies
+      - name: Regenerate Clean Android Project
         run: |
-          flutter clean
+          # مسح مجلد الأندرويد القديم المسبب للكراش السحابي
+          rm -rf android
+          
+          # إعادة توليد مجلد أندرويد فابريكا فريش ونظيف 100% متوافق مع السيرفر
+          flutter create --org com.magic.lantern --project-name magic_lantern .
+          
           flutter pub get
 
       - name: Build Android Release APK
