@@ -25,22 +25,16 @@ jobs:
           cat << 'EOF' > clean_build_dir/lib/main.dart
           import 'package:flutter/material.dart';
 
-          void main() {
-            runApp(const MyApp());
-          }
+          void main() => runApp(const MyApp());
 
           class MyApp extends StatelessWidget {
             const MyApp({super.key});
-
             @override
             Widget build(BuildContext context) {
               return MaterialApp(
                 title: 'الفانوس السحري',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(
-                  useMaterial3: true,
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
-                ),
+                theme: ThemeData(useMaterial3: true),
                 home: const LoginScreen(),
               );
             }
@@ -53,9 +47,6 @@ jobs:
           }
 
           class _LoginScreenState extends State<LoginScreen> {
-            final _emailController = TextEditingController();
-            final _passwordController = TextEditingController();
-
             @override
             Widget build(BuildContext context) {
               return Scaffold(
@@ -78,30 +69,24 @@ jobs:
                           ),
                           const SizedBox(height: 40),
                           TextField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'البريد الإلكتروني / رقم الكابتن',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.email, color: Colors.amber),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.email, color: Colors.amber),
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
-                            controller: _passwordController,
                             obscureText: true,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'كلمة المرور',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.lock, color: Colors.amber),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.amber),
                             ),
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('جاري تسجيل الدخول وفتح خدمات الـ GPS...')),
-                              );
-                            },
+                            onPressed: () {},
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               backgroundColor: Colors.amber,
@@ -111,14 +96,10 @@ jobs:
                           ),
                           const SizedBox(height: 20),
                           TextButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('جاري فتح شاشة تسجيل كابتن / راكب جديد...')),
-                              );
-                            },
+                            onPressed: () {},
                             child: const Text(
-                              'ليس لديك حساب? تسجيل مستخدم جديد',
-                              style: TextStyle(color: Color(0xFFFFB300), fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              'ليس لديك حساب؟ تسجيل مستخدم جديد',
+                              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                             ),
                           ),
                         ],
@@ -130,13 +111,6 @@ jobs:
             }
           }
           EOF
-
-          flutter pub get
-
-      - name: Inject Local SDK Properties
-        run: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > clean_build_dir/android/local.properties
-          echo "flutter.sdk=$FLUTTER_ROOT" >> clean_build_dir/android/local.properties
 
       - name: Build Android Release APK
         run: |
