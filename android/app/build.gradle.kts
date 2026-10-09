@@ -1,28 +1,39 @@
-pluginManagement {
-    val flutterSdkPath = provider {
-        val properties = java.util.Properties()
-        val propertiesFile = settingsDir.parentFile.resolve("local.properties")
-        if (propertiesFile.exists()) {
-            propertiesFile.inputStream().use { properties.load(it) }
-        }
-        val sdkPath = properties.getProperty("flutter.sdk") ?: System.getenv("FLUTTER_ROOT")
-        requireNotNull(sdkPath) { "Flutter SDK not found. Define flutter.sdk in local.properties or FLUTTER_ROOT env variable." }
-        sdkPath
-    }
-
-    includeBuild("${flutterSdkPath.get()}/packages/flutter_tools/gradle")
-
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-
 plugins {
-    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.1.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.8.22" apply false
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
-include(":app")
+android {
+    namespace = "com.magic.lantern"
+    compileSdkVersion(34) // ترقية نسخة الـ SDK لإطلاق رادار تتبع الكباتن حياً
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    defaultConfig {
+        applicationId = "com.magic.lantern"
+        minSdkVersion(21) // متوافق تماماً مع حزم Google Maps
+        targetSdkVersion(34)
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled = false
+            shrinkResources = false
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
