@@ -1,88 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'network_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String _selectedAccountType = 'Customer';
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _networkService = NetworkService();
+  bool _isLoading = false;
 
-  void _handleLogin() {
-    // النظام يتعرف على نوع الحساب المختار ويفتح الواجهة المناسبة تلقائياً فوراً
-    switch (_selectedAccountType) {
-      case 'Customer': Navigator.pushReplacementNamed(context, '/passenger_home'); break;
-      case 'Captain': Navigator.pushReplacementNamed(context, '/captain_home'); break;
-      case 'Service Provider': Navigator.pushReplacementNamed(context, '/provider_home'); break;
-      case 'Merchant': Navigator.pushReplacementNamed(context, '/merchant_home'); break;
-      case 'Admin': Navigator.pushReplacementNamed(context, '/admin_home'); break;
-      case 'Employee': Navigator.pushReplacementNamed(context, '/employee_home'); break;
-      default: Navigator.pushReplacementNamed(context, '/passenger_home');
+  void _handleLogin() async {
+    setState(() => _isLoading = true);
+    final result = await _networkService.loginUser(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+    setState(() => _isLoading = false);
+
+    if (result != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح الرادار...')),
+      );
+      // هنا ينطلق التوجيه التلقائي للـ Dashboard ورادار الـ GPS
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خطأ في البيانات أو عطل بالاتصال!')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1A24),
-      body: Center(
-        child: SingleChildScrollView(
+      backgroundColor: const Color(0xFFFFFDE7),
+      body: SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.brightness_5, size: 80, color: Color(0xFFD4AF37)),
-              const SizedBox(height: 8),
-              Text('الفانوس السحري', style: GoogleFonts.cairo(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 24),
-              DropdownButtonFormField<String>(
-                value: _selectedAccountType,
-                dropdownColor: const Color(0xFF162534),
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'نوع الحساب الرقمي', labelStyle: const TextStyle(color: Color(0xFFD4AF37)),
-                  enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Color(0xFFD4AF37)), borderRadius: BorderRadius.circular(12)),
-                ),
-                items: ['Customer', 'Captain', 'Service Provider', 'Merchant', 'Company', 'Employee', 'Admin']
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) => setState(() => _selectedAccountType = v!),
+              const Icon(Icons.flash_on, size: 80, color: Colors.amber),
+              const SizedBox(height: 20),
+              const Text(
+                'تسجيل الدخول - الفانوس السحري',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 30),
               TextField(
-                controller: _phoneController, 
-                style: const TextStyle(color: Colors.white), 
-                decoration: InputDecoration(
-                  hintText: 'رقم الهاتف', 
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.phone, color: Color(0xFFD4AF37)), 
-                  enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white10), borderRadius: BorderRadius.circular(12)),
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'البريد الإلكتروني',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email, color: Colors.amber),
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
-                controller: _passwordController, 
-                obscureText: true, 
-                style: const TextStyle(color: Colors.white), 
-                decoration: InputDecoration(
-                  hintText: 'كلمة المرور', 
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.lock, color: Color(0xFFD4AF37)), 
-                  enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.white10), borderRadius: BorderRadius.circular(12)),
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'كلمة المرور',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock, color: Colors.amber),
                 ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4AF37), minimumSize: const Size(double.infinity, 52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), 
-                onPressed: _handleLogin, 
-                child: Text('دخول 🚀', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0F1A24))),
-              ),
-              const SizedBox(height: 16),
-              TextButton(onPressed: () => Navigator.pushNamed(context, '/register'), child: const Text('إنشاء حساب جديد ✨', style: TextStyle(color: Color(0xFFD4AF37)))),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+                  : ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.amber,
+                      ),
+                      child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black)),
+                    ),
             ],
           ),
         ),
