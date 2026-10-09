@@ -19,19 +19,74 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: false
+          cache: false # إلغاء الكاش تماماً لضمان القراءة على مية بيضا ونظافة تامة
 
       - name: Purge Everything and Build Fresh Project
         run: |
-          # 1. مسح وإبادة كل الملفات القديمة والمجلدات المتداخلة سحابياً تماماً
+          # 1. مسح وإبادة كل المجلدات القديمة وملفات أندرويد الويندوز المعلقة سحابياً كلياً
           rm -rf *
           
-          # 2. إنشاء مشروع فلاتر وأندرويد جديد فابريكا من الصفر بالكامل داخل السيرفر
+          # 2. إنشاء مشروع فلاتر وأندرويد جديد فابريكا من الصفر تماماً داخل السيرفر
           flutter create --org com.magic.lantern --project-name magic_lantern_app .
           
-          # 3. حقن كود واجهة تسجيل الدخول الملكية للفانوس السحري المحدثة والصافية 100%
+          # 3. حقن شفرة ملف شبكة الاتصال بسيرفر Clever Cloud واستعادة دالة تسجيل الدخول
+          cat << 'EOF' > lib/network_service.dart
+          import 'dart:convert';
+          import 'dart:io';
+          import 'package:http/http.dart' as http;
+          import 'package:http/io_client.dart';
+
+          class NetworkService {
+            static const String baseUrl = "https://clever-cloud.com";
+            late IOClient _client;
+
+            NetworkService() {
+              final HttpClient httpClient = HttpClient()
+                ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+              _client = IOClient(httpClient);
+            }
+
+            Future<bool> registerUser({
+              required String name,
+              required String phone,
+              required String email,
+              required String password,
+              required String role,
+            }) async {
+              try {
+                final response = await _client.post(
+                  Uri.parse('$baseUrl/auth/register'),
+                  headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                  body: jsonEncode({'name': name, 'phone': phone, 'email': email, 'password': password, 'role': role}),
+                );
+                return response.statusCode == 201 || response.statusCode == 200;
+              } catch (e) {
+                return false;
+              }
+            }
+
+            Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+              try {
+                final response = await _client.post(
+                  Uri.parse('$baseUrl/auth/login'),
+                  headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                  body: jsonEncode({'email': email, 'password': password}),
+                );
+                if (response.statusCode == 200) {
+                  return jsonDecode(response.body) as Map<String, dynamic>;
+                }
+                return null;
+              } catch (e) {
+                return null;
+              }
+            }
+          }
+          EOF
+
+          # 4. حقن كود ملف الـ main.dart والمربوط بشاشة الدخول وزرار تسجيل مستخدم جديد فابريكا
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
+          import 'network_service.dart';
 
           void main() {
             runApp(const MyApp());
@@ -63,58 +118,100 @@ jobs:
           class _LoginScreenState extends State<LoginScreen> {
             final _emailController = TextEditingController();
             final _passwordController = TextEditingController();
+            final _networkService = NetworkService();
+            bool _isLoading = false;
+
+            void _handleLogin() async {
+              if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('من فضلك أدخل البريد الإلكتروني وكلمة المرور أولاً!')),
+                );
+                return;
+              }
+
+              setState(() => _isLoading = true);
+              final result = await _networkService.loginUser(
+                _emailController.text.trim(),
+                _passwordController.text.trim(),
+              );
+              setState(() => _isLoading = false);
+
+              if (result != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح الرادار والـ Dashboard...')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('خطأ في البيانات أو عطل بالاتصال بالسيرفر السحابي!')),
+                );
+              }
+            }
 
             @override
             Widget build(BuildContext context) {
               return Scaffold(
                 backgroundColor: const Color(0xFFFFFDE7),
                 body: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Icon(Icons.flash_on, size: 80, color: Colors.amber),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'تسجيل الدخول - الفانوس السحري',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 30),
-                        TextField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'البريد الإلكتروني',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.email, color: Colors.amber),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 60),
+                          const Icon(Icons.flash_on, size: 80, color: Colors.amber),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'تسجيل الدخول - الفانوس السحري',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'كلمة المرور',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.lock, color: Colors.amber),
+                          const SizedBox(height: 40),
+                          TextField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'البريد الإلكتروني / رقم الكابتن',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.email, color: Colors.amber),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('جاري تسجيل الدخول وفتح خدمات الـ GPS...')),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.amber,
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'كلمة المرور',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.lock, color: Colors.amber),
+                            ),
                           ),
-                          child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black)),
-                        ),
-                      ],
+                          const SizedBox(height: 24),
+                          _isLoading
+                              ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+                              : ElevatedButton(
+                                  onPressed: _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: Colors.amber,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                  ),
+                                  child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold)),
+                                ),
+                          const SizedBox(height: 20),
+                          TextButton(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('جاري فتح شاشة تسجيل كابتن / راكب جديد...')),
+                              );
+                            },
+                            child: const Text(
+                              'ليس لديك حساب؟ تسجيل مستخدم جديد',
+                              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
