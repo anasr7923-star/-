@@ -19,14 +19,14 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: false # إلغاء الكاش تماماً لضمان القراءة على مية بيضا ونظافة تامة
+          cache: false
 
       - name: Purge Everything and Build Fresh Project
         run: |
-          # 1. مسح وإبادة كل المجلدات القديمة وملفات أندرويد الويندوز المعلقة سحابياً كلياً
+          # 1. تصفير وإبادة أي كواش أو ملفات قديمة معلقة سحابياً كلياً
           rm -rf *
           
-          # 2. إنشاء مشروع فلاتر وأندرويد جديد فابريكا من الصفر تماماً داخل السيرفر
+          # 2. إنشاء مشروع فلاتر جديد فابريكا من الصفر داخل السيرفر
           flutter create --org com.magic.lantern --project-name magic_lantern_app .
           
           # 3. حقن شفرة ملف شبكة الاتصال بسيرفر Clever Cloud واستعادة دالة تسجيل الدخول
@@ -83,7 +83,7 @@ jobs:
           }
           EOF
 
-          # 4. حقن كود ملف الـ main.dart والمربوط بشاشة الدخول وزرار تسجيل مستخدم جديد فابريكا
+          # 4. حقن كود ملف الـ main.dart الصافي والمكتمل ومربوط بزرار تسجيل مستخدم جديد
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -206,8 +206,8 @@ jobs:
                               );
                             },
                             child: const Text(
-                              'ليس لديك حساب؟ تسجيل مستخدم جديد',
-                              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              'ليس لديك حساب? تسجيل مستخدم جديد',
+                              style: TextStyle(color: Color(0xFFFFB300), fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                             ),
                           ),
                         ],
@@ -222,11 +222,22 @@ jobs:
           
           flutter pub get
 
-      - name: Build Android Release APK
-        run: flutter build apk --release --target-platform android-arm64
-
-      - name: Upload Finished APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Inject SDK and Force Upgrade Kotlin DSL Properties
+        run: |
+          # 1. ضبط ملف الخصائص السحابي الرئيسي
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
+          
+          # 2. استهداف ملف الـ Kotlin DSL الحديث (.kts) وتعديل قيم التجميع بالمسطرة هندسياً غصب عن السيرفر
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/compileSdkVersion(.*/compileSdkVersion(34)/g' android/app/build.gradle.kts || true
+            sed -i 's/minSdkVersion(.*/minSdkVersion(21)/g' android/app/build.gradle.kts || true
+            sed -i 's/targetSdkVersion(.*/targetSdkVersion(34)/g' android/app/build.gradle.kts || true
+          fi
+- name: Build Android Release APK
+run: flutter build apk --release --target-platform android-arm64
+- name: Upload Finished APK
+uses: actions/upload-artifact@v4
+with:
+name: app-release
+path: build/app/outputs/flutter-apk/app-release.apk
