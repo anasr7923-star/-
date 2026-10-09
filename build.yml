@@ -20,10 +20,10 @@ jobs:
 
       - name: Create Independent Clean App
         run: |
-          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي ملفات قديمة
+          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي تضارب محلي
           flutter create --org com.magic.lantern --project-name magic_lantern_app clean_build_dir
           
-          # 2. حقن شفرة محرك الاتصال بقاعدة بيانات سيرفر Clever Cloud والمحافظ الرقمية
+          # 2. حقن شفرة محرك الاتصال بقاعدة بيانات سيرفر Clever Cloud
           cat << 'EOF' > clean_build_dir/lib/network_service.dart
           import 'dart:convert';
           import 'dart:io';
@@ -77,7 +77,7 @@ jobs:
           }
           EOF
           
-          # 3. حقن المنظومة الكاملة المترابطة (ملف الانطلاق والشاشات المدمجة معاً)
+          # 3. حقن كود الواجهة الكاملة الشاملة الحقيقية بالفانوس والخانات وأزرار تسجيل الحساب الجديد والـ Dashboard
           cat << 'EOF' > clean_build_dir/lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -100,7 +100,6 @@ jobs:
             }
           }
 
-          // 🔐 شاشة تسجيل الدخول المركزية بالخانات الكاملة والربط بالسيرفر
           class LoginScreen extends StatefulWidget {
             const LoginScreen({super.key});
             @override
@@ -116,7 +115,7 @@ jobs:
             void _handleLogin() async {
               if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('من فضلك أدخل البريد الإلكتروني وكلمة المرور أولاً!')),
+                  const SnackBar(content: Text('من فضلك أدخل البيانات أولاً!')),
                 );
                 return;
               }
@@ -129,7 +128,7 @@ jobs:
 
               if (result != null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح لوحة القيادة...')),
+                  const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح لوحة التحكم...')),
                 );
                 Navigator.pushReplacement(
                   context,
@@ -154,7 +153,7 @@ jobs:
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 50),
+                          const SizedBox(height: 60),
                           const Icon(Icons.flash_on, size: 80, color: Colors.amber),
                           const SizedBox(height: 20),
                           const Text(
@@ -215,7 +214,6 @@ jobs:
             }
           }
 
-          // 📝 شاشة تسجيل مستخدم جديد / كابتن فابريكا ومربوطة بالسيرفر
           class RegisterScreen extends StatefulWidget {
             const RegisterScreen({super.key});
             @override
@@ -228,9 +226,10 @@ jobs:
             final _emailController = TextEditingController();
             final _passwordController = TextEditingController();
             final _networkService = NetworkService();
-String _selectedRole = 'driver';
-bool _isLoading = false;
-void _handleRegister() async {
+            String _selectedRole = 'driver';
+            bool _isLoading = false;
+
+            void _handleRegister() async {
 if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty || _emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك أكمل كافة البيانات!')));
 return;
@@ -245,10 +244,10 @@ role: _selectedRole,
 );
 setState(() => _isLoading = false);
 if (success) {
-ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الحساب بنجاح! يمكنك الدخول الآن.')));
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الحساب بنجاح!')));
 Navigator.pop(context);
 } else {
-ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التسجيل! تأكد من البيانات أو عطل الشبكة.')));
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التسجيل! تأكد من البيانات.')));
 }
 }
 @override
@@ -293,7 +292,6 @@ child: const Text('إنشاء الحساب وضخ البيانات', style: Text
 );
 }
 }
-// 📊 شاشة لوحة التحكم المركزية ورادار الـ GPS والمحافظ بعد الدخول الناجح
 class AdminDashboard extends StatelessWidget {
 const AdminDashboard({super.key});
 @override
@@ -313,9 +311,7 @@ const SizedBox(height: 10),
 Text('تم ربط محفظتك السحابية لايف بسيرفر Clever Cloud', style: TextStyle(fontSize: 16, color: Colors.grey.shade700), textAlign: TextAlign.center),
 const SizedBox(height: 30),
 ElevatedButton.icon(
-onPressed: () {
-ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('جاري قراءة وتحديث رصيد المحفظة بالثانية...')));
-},
+onPressed: () {},
 icon: const Icon(Icons.account_balance_wallet, color: Colors.black),
 label: const Text('تحديث رصيد المحفظة الرقمية', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
 style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
