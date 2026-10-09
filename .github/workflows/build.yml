@@ -19,9 +19,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
+          cache: false # تصفير الكاش السحابي التالف لإجبار السيرفر على التجميع الفريش النظيف
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           flutter clean
           flutter pub get
