@@ -20,10 +20,67 @@ jobs:
 
       - name: Create Independent Clean App
         run: |
+          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي ملفات قديمة
           flutter create --org com.magic.lantern --project-name magic_lantern_app clean_build_dir
           
+          # 2. حقن شفرة ملف شبكة الاتصال بقاعدة بيانات سيرفر Clever Cloud
+          cat << 'EOF' > clean_build_dir/lib/network_service.dart
+          import 'dart:convert';
+          import 'dart:io';
+          import 'package:http/http.dart' as http;
+          import 'package:http/io_client.dart';
+
+          class NetworkService {
+            static const String baseUrl = "https://clever-cloud.com";
+            late IOClient _client;
+
+            NetworkService() {
+              final HttpClient httpClient = HttpClient()
+                ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+              _client = IOClient(httpClient);
+            }
+
+            Future<bool> registerUser({
+              required String name,
+              required String phone,
+              required String email,
+              required String password,
+              required String role,
+            }) async {
+              try {
+                final response = await _client.post(
+                  Uri.parse('$baseUrl/auth/register'),
+                  headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                  body: jsonEncode({'name': name, 'phone': phone, 'email': email, 'password': password, 'role': role}),
+                );
+                return response.statusCode == 201 || response.statusCode == 200;
+              } catch (e) {
+                return false;
+              }
+            }
+
+            Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+              try {
+                final response = await _client.post(
+                  Uri.parse('$baseUrl/auth/login'),
+                  headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                  body: jsonEncode({'email': email, 'password': password}),
+                );
+                if (response.statusCode == 200) {
+                  return jsonDecode(response.body) as Map<String, dynamic>;
+                }
+                return null;
+              } catch (e) {
+                return null;
+              }
+            }
+          }
+          EOF
+          
+          # 3. حقن منظومة واجهة الدخول الكلية وزرار تسجيل مستخدم جديد باللمس
           cat << 'EOF' > clean_build_dir/lib/main.dart
           import 'package:flutter/material.dart';
+          import 'network_service.dart';
 
           void main() => runApp(const MyApp());
 
@@ -34,7 +91,10 @@ jobs:
               return MaterialApp(
                 title: 'الفانوس السحري',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(useMaterial3: true),
+                theme: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+                ),
                 home: const LoginScreen(),
               );
             }
@@ -47,6 +107,36 @@ jobs:
           }
 
           class _LoginScreenState extends State<LoginScreen> {
+            final _emailController = TextEditingController();
+            final _passwordController = TextEditingController();
+            final _networkService = NetworkService();
+            bool _isLoading = false;
+
+            void _handleLogin() async {
+              if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('من فضلك أدخل البيانات أولاً!')),
+                );
+                return;
+              }
+              setState(() => _isLoading = true);
+              final result = await _networkService.loginUser(
+                _emailController.text.trim(),
+                _passwordController.text.trim(),
+              );
+              setState(() => _isLoading = false);
+
+              if (result != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح الرادار...')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('خطأ في البيانات أو عطل بالاتصال بالسيرفر!')),
+                );
+              }
+            }
+
             @override
             Widget build(BuildContext context) {
               return Scaffold(
@@ -69,6 +159,7 @@ jobs:
                           ),
                           const SizedBox(height: 40),
                           TextField(
+                            controller: _emailController,
                             decoration: InputDecoration(
                               labelText: 'البريد الإلكتروني / رقم الكابتن',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -77,6 +168,7 @@ jobs:
                           ),
                           const SizedBox(height: 16),
                           TextField(
+                            controller: _passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
                               labelText: 'كلمة المرور',
@@ -85,21 +177,23 @@ jobs:
                             ),
                           ),
                           const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: Colors.amber,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                            ),
-                            child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold)),
-                          ),
+                          _isLoading
+                              ? const Center(child: CircularProgressIndicator(color: Colors.amber))
+                              : ElevatedButton(
+                                  onPressed: _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: Colors.amber,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                  ),
+                                  child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold)),
+                                ),
                           const SizedBox(height: 20),
                           TextButton(
                             onPressed: () {},
                             child: const Text(
                               'ليس لديك حساب؟ تسجيل مستخدم جديد',
-                              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                              style: TextStyle(color: Color(0xFFFFB300), fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
                             ),
                           ),
                         ],
@@ -112,6 +206,11 @@ jobs:
           }
           EOF
 
+      - name: Inject Local SDK Properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > clean_build_dir/android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> clean_build_dir/android/local.properties
+
       - name: Build Android Release APK
         run: |
           cd clean_build_dir
@@ -122,4 +221,3 @@ jobs:
         with:
           name: app-release
           path: clean_build_dir/build/app/outputs/flutter-apk/app-release.apk
-          
