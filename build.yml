@@ -20,7 +20,7 @@ jobs:
 
       - name: Create Independent Clean App
         run: |
-          # 1. إنشاء المشروع سحابياً فابريكا من الصفر تماماً
+          # 1. إنشاء مشروع فلاتر مستقل تماماً ومنعزل عن أي تعارض حروف
           flutter create --org com.magic.lantern --project-name magic_lantern_app .
           
           # 2. حقن شفرة محرك الاتصال بقاعدة بيانات سيرفر Clever Cloud والمحافظ الرقمية
@@ -77,7 +77,7 @@ jobs:
           }
           EOF
           
-          # 3. حقن كود الواجهات الكاملة المترابطة (الدخول، التسجيل، والـ Dashboard)
+          # 3. حقن المنظومة الكاملة المترابطة (واجهة الدخول، التسجيل، والـ Dashboard ورادار الـ GPS)
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'network_service.dart';
@@ -91,7 +91,10 @@ jobs:
               return MaterialApp(
                 title: 'الفانوس السحري',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(useMaterial3: true),
+                theme: ThemeData(
+                  useMaterial3: true,
+                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+                ),
                 home: const LoginScreen(),
               );
             }
@@ -111,18 +114,30 @@ jobs:
 
             void _handleLogin() async {
               if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك أدخل البيانات أولاً!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('من فضلك أدخل البريد الإلكتروني وكلمة المرور أولاً!')),
+                );
                 return;
               }
               setState(() => _isLoading = true);
-              final result = await _networkService.loginUser(_emailController.text.trim(), _passwordController.text.trim());
+              final result = await _networkService.loginUser(
+                _emailController.text.trim(),
+                _passwordController.text.trim(),
+              );
               setState(() => _isLoading = false);
 
               if (result != null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح لوحة التحكم...')));
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AdminDashboard()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تم تسجيل الدخول بنجاح! جاري فتح لوحة القيادة...')),
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminDashboard()),
+                );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('خطأ في البيانات أو عطل بالاتصال بالسيرفر!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('خطأ في البيانات أو عطل بالاتصال بالسيرفر!')),
+                );
               }
             }
 
@@ -138,20 +153,58 @@ jobs:
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 60),
+                          const SizedBox(height: 50),
                           const Icon(Icons.flash_on, size: 80, color: Colors.amber),
                           const SizedBox(height: 20),
-                          const Text('تسجيل الدخول - الفانوس السحري', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const Text(
+                            'تسجيل الدخول - الفانوس السحري',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
                           const SizedBox(height: 40),
-                          TextField(controller: _emailController, decoration: InputDecoration(labelText: 'البريد الإلكتروني / رقم الكابتن', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), prefixIcon: const Icon(Icons.email, color: Colors.amber))),
+                          TextField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'البريد الإلكتروني / رقم الكابتن',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.email, color: Colors.amber),
+                            ),
+                          ),
                           const SizedBox(height: 16),
-                          TextField(controller: _passwordController, obscureText: true, decoration: InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), prefixIcon: const Icon(Icons.lock, color: Colors.amber))),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'كلمة المرور',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              prefixIcon: const Icon(Icons.lock, color: Colors.amber),
+                            ),
+                          ),
                           const SizedBox(height: 24),
                           _isLoading
                               ? const Center(child: CircularProgressIndicator(color: Colors.amber))
-                              : ElevatedButton(onPressed: _handleLogin, style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.amber, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))), child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold))),
+                              : ElevatedButton(
+                                  onPressed: _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: Colors.amber,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                  ),
+                                  child: const Text('دخول الكابتن / الركاب', style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold)),
+                                ),
                           const SizedBox(height: 20),
-                          TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen())), child: const Text('ليس لديك حساب؟ تسجيل مستخدم جديد', style: TextStyle(color: Color(0xFFFFB300), fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                              );
+                            },
+                            child: const Text(
+                              'ليس لديك حساب؟ تسجيل مستخدم جديد',
+                              style: TextStyle(color: Color(0xFFFFB300), fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -177,32 +230,36 @@ jobs:
             bool _isLoading = false;
 
             void _handleRegister() async {
-              if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty || _emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك أكمل كافة البيانات!')));
-                return;
-              }
-              setState(() => _isLoading = true);
-              final success = await _networkService.registerUser(name: _nameController.text.trim(), phone: _phoneController.text.trim(), email: _emailController.text.trim(), password: _passwordController.text.trim(), role: _selectedRole);
-              setState(() => _isLoading = false);
-
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الحساب بنجاح!')));
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التسجيل! تأكد من البيانات.')));
-              }
-            }
-
-            @override
-            Widget build(BuildContext context) {
-              return Scaffold(
-                appBar: AppBar(title: const Text('تسجيل حساب جديد'), backgroundColor: Colors.amber),
-                body: SafeArea(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty || _emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك أكمل كافة البيانات!')));
+return;
+}
+setState(() => _isLoading = true);
+final success = await _networkService.registerUser(
+name: _nameController.text.trim(),
+phone: _phoneController.text.trim(),
+email: _emailController.text.trim(),
+password: _passwordController.text.trim(),
+role: _selectedRole,
+);
+setState(() => _isLoading = false);
+if (success) {
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل الحساب بنجاح! يمكنك الدخول الآن.')));
+Navigator.pop(context);
+} else {
+ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التسجيل! تأكد من البيانات أو عطل الشبكة.')));
+}
+}
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(title: const Text('تسجيل حساب جديد'), backgroundColor: Colors.amber),
+body: SafeArea(
+child: SingleChildScrollView(
+padding: const EdgeInsets.all(24.0),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.stretch,
+children: [
 TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'الاسم الكامل', border: OutlineInputBorder())),
 const SizedBox(height: 16),
 TextField(controller: _phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'رقم الهاتف', border: OutlineInputBorder())),
@@ -211,9 +268,23 @@ TextField(controller: _emailController, keyboardType: TextInputType.emailAddress
 const SizedBox(height: 16),
 TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder())),
 const SizedBox(height: 16),
-DropdownButtonFormField(value: _selectedRole, items: const [DropdownMenuItem(value: 'driver', child: Text('كابتن (سائق)')), DropdownMenuItem(value: 'passenger', child: Text('راكب'))], onChanged: (val) => setState(() => _selectedRole = val!), decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'نوع الحساب')),
+DropdownButtonFormField(
+value: _selectedRole,
+items: const [
+DropdownMenuItem(value: 'driver', child: Text('كابتن (سائق)')),
+DropdownMenuItem(value: 'passenger', child: Text('راكب')),
+],
+onChanged: (val) => setState(() => _selectedRole = val!),
+decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'نوع الحساب'),
+),
 const SizedBox(height: 24),
-_isLoading ? const Center(child: CircularProgressIndicator(color: Colors.amber)) : ElevatedButton(onPressed: _handleRegister, style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.amber), child: const Text('إنشاء الحساب وضخ البيانات', style: TextStyle(fontSize: 18, color: Colors.black))),
+_isLoading
+? const Center(child: CircularProgressIndicator(color: Colors.amber))
+: ElevatedButton(
+onPressed: _handleRegister,
+style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.amber),
+child: const Text('إنشاء الحساب وضخ البيانات', style: TextStyle(fontSize: 18, color: Colors.black)),
+),
 ],
 ),
 ),
@@ -237,7 +308,7 @@ const Icon(Icons.map, size: 100, color: Colors.amber),
 const SizedBox(height: 20),
 const Text('رادار الـ GPS والخرائط الحية نشط الآن', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
 const SizedBox(height: 10),
-Text('تم ربط محفظتك السحابية لايف بسيرفر Clever Cloud', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center),
+Text('تم ربط محفظتك السحابية لايف بسيرفر Clever Cloud', style: TextStyle(fontSize: 16, color: Colors.grey.shade700), textAlign: TextAlign.center),
 ],
 ),
 ),
